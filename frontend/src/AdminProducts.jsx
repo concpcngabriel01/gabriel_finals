@@ -16,7 +16,9 @@ const emptyProduct = {
 
 async function request(path, { token, ...options } = {}) {
   const headers = { Accept: "application/json", ...options.headers };
-  if (options.body) headers["Content-Type"] = "application/json";
+  if (options.body && !(options.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
   if (token) headers.Authorization = `Bearer ${token}`;
 
   let response;
@@ -61,8 +63,17 @@ function ProductForm({ product, busy, onCancel, onSave }) {
         <label>Category<input name="category" defaultValue={product.category} required maxLength={100} /></label>
         <label>Price (₱)<input name="price" type="number" defaultValue={product.price} required min="0" step="0.01" /></label>
         <label>Stock<input name="stock" type="number" defaultValue={product.stock} required min="0" step="1" /></label>
-        <label>Thumbnail URL<input name="thumbnail" type="url" defaultValue={product.thumbnail} maxLength={200} /></label>
-        <label className="admin-form-wide">Image URL<input name="image_url" type="url" defaultValue={product.image_url} maxLength={200} /></label>
+        <label className="admin-form-wide">
+          Product image
+          <input name="uploaded_image" type="file" accept="image/*" />
+          {product.thumbnail && (
+            <img
+              className="admin-product-image-preview"
+              src={product.thumbnail}
+              alt={`Current image for ${product.name}`}
+            />
+          )}
+        </label>
         <label className="admin-form-wide">Description<textarea name="description" defaultValue={product.description} rows="3" /></label>
         <label className="admin-active-toggle">
           <input name="is_active" type="checkbox" defaultChecked={product.is_active} />
@@ -138,9 +149,16 @@ export default function AdminProducts() {
     setError("");
     setNotice("");
     const formData = new FormData(event.currentTarget);
-    const payload = Object.fromEntries(formData.entries());
-    payload.is_active = formData.has("is_active");
-    payload.stock = Number(payload.stock);
+    const payload = new FormData();
+    for (const [name, value] of formData.entries()) {
+      if (name === "is_active" || name === "uploaded_image") continue;
+      payload.append(name, value);
+    }
+    const image = formData.get("uploaded_image");
+    if (image instanceof File && image.name) {
+      payload.append("uploaded_image", image);
+    }
+    payload.set("is_active", String(formData.has("is_active")));
     try {
       const isEditing = Boolean(editingProduct?.id);
       const endpoint = isEditing

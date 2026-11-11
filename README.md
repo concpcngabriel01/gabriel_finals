@@ -61,6 +61,8 @@ requests to Django at `http://127.0.0.1:8000`.
   with a Django staff or superuser username and password. Staff can add products,
   edit their details and inventory, restore hidden products, or hide products
   from the storefront; deletion keeps existing cart and order references intact.
+  Product images can be uploaded directly (up to 5 MB) and are served from
+  Django's media directory.
 
 Cash on Delivery works normally. While `PAYMENT_DEMO_MODE` is enabled (by
 default only when Django `DEBUG` is enabled), GCash, Maya, card, online

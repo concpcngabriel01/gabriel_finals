@@ -25,6 +25,7 @@ class Product(models.Model):
     stock = models.PositiveIntegerField(default=0)
     thumbnail = models.URLField(blank=True)
     image_url = models.URLField(blank=True)
+    uploaded_image = models.ImageField(upload_to="products/", blank=True, null=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -101,7 +101,6 @@ export default function PasswordRecovery({ onBackToLogin }) {
             </button>
           </form>
         )}
-        {!isReset && <p className="recovery-help">For local development, the reset email and link appear in the Django server terminal.</p>}
         <button className="recovery-back-button" onClick={onBackToLogin} type="button">Back to log in</button>
       </section>
     </main>

@@ -1,11 +1,15 @@
 from unittest.mock import patch
 import re
+from io import BytesIO
+from tempfile import TemporaryDirectory
 
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.core import mail
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
+from PIL import Image
 from rest_framework.test import APIClient
 
 from .models import (
@@ -683,6 +687,44 @@ class AdminProductApiTests(TestCase):
             self.client.get(f"/api/products/{payload['id']}/").status_code,
             404,
         )
+
+    def test_admin_can_upload_product_image(self):
+        login = self.admin_login()
+        self.assertEqual(login.status_code, 200, login.data)
+        self.client.credentials(
+            HTTP_AUTHORIZATION="Bearer " + login.data["access"]
+        )
+
+        image_buffer = BytesIO()
+        Image.new("RGB", (1, 1), color="white").save(image_buffer, format="PNG")
+        image = SimpleUploadedFile(
+            "lamp.png", image_buffer.getvalue(), content_type="image/png"
+        )
+        payload = {
+            "id": "admin-image-001",
+            "name": "Image Upload Lamp",
+            "description": "A test product with an uploaded image.",
+            "sku": "ADMIN-IMAGE-001",
+            "price": "1250.00",
+            "category": "Home Decorations",
+            "stock": "12",
+            "is_active": "true",
+            "uploaded_image": image,
+        }
+
+        with TemporaryDirectory() as media_root:
+            with override_settings(MEDIA_ROOT=media_root):
+                created = self.client.post(
+                    "/api/admin/products/", payload, format="multipart"
+                )
+                self.assertEqual(created.status_code, 201, created.data)
+                self.assertTrue(created.data["thumbnail"].startswith("/media/products/"))
+
+                public_product = self.client.get("/api/products/admin-image-001/")
+                self.assertEqual(public_product.status_code, 200)
+                self.assertEqual(
+                    public_product.data["thumbnail"], created.data["thumbnail"]
+                )
 
 
 @override_settings(

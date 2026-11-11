@@ -438,6 +438,16 @@
   font-weight: 600;
 }
 
+.admin-product-image-preview {
+  display: block;
+  width: 120px;
+  height: 100px;
+  margin-top: 8px;
+  border-radius: 12px;
+  background: #e7e9e2;
+  object-fit: cover;
+}
+
 .admin-product-info {
   min-width: 0;
 }

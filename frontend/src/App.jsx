@@ -2251,10 +2251,6 @@ function App() {
                               </div>
                             </div>
                           )}
-                        <p className="mb-0 mt-3 text-xs text-[#78857a]">
-                          Demo only — online payments are simulated; no real
-                          payment is processed.
-                        </p>
                       </section>
                     </div>
                     <aside className="h-fit rounded-[24px] border border-[#dfe4da] bg-white/65 p-6 shadow-sm max-[620px]:p-4">

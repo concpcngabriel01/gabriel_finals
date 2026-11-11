@@ -140,6 +140,18 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     UniqueID = serializers.CharField(source="id", read_only=True)
+    thumbnail = serializers.SerializerMethodField()
+    image_url = serializers.SerializerMethodField()
+
+    def get_thumbnail(self, product):
+        if product.uploaded_image:
+            return product.uploaded_image.url
+        return product.thumbnail
+
+    def get_image_url(self, product):
+        if product.uploaded_image:
+            return product.uploaded_image.url
+        return product.image_url
 
     class Meta:
         model = Product
@@ -163,6 +175,12 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class AdminProductSerializer(serializers.ModelSerializer):
     id = serializers.CharField(max_length=64)
+    uploaded_image = serializers.ImageField(required=False, allow_null=True)
+
+    def validate_uploaded_image(self, image):
+        if image and image.size > 5 * 1024 * 1024:
+            raise serializers.ValidationError("Image must be 5 MB or smaller.")
+        return image
 
     class Meta:
         model = Product
@@ -176,12 +194,20 @@ class AdminProductSerializer(serializers.ModelSerializer):
             "stock",
             "thumbnail",
             "image_url",
+            "uploaded_image",
             "is_active",
         ]
 
     def update(self, instance, validated_data):
         validated_data.pop("id", None)
         return super().update(instance, validated_data)
+
+    def to_representation(self, product):
+        data = super().to_representation(product)
+        if product.uploaded_image:
+            data["thumbnail"] = product.uploaded_image.url
+            data["image_url"] = product.uploaded_image.url
+        return data
 
 
 class WishlistItemSerializer(serializers.ModelSerializer):
